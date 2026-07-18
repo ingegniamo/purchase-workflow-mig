@@ -83,12 +83,15 @@ class TestProductSupplierinfoDiscount(TransactionCase):
             )
 
     def test_004_prepare_purchase_order_line(self):
+        # Since Odoo 19, core passes the vendor's res.partner here (not the
+        # product.supplierinfo as in earlier versions) — see
+        # purchase_stock._prepare_purchase_order_line_from_procurement.
         res = self.purchase_order_line_model._prepare_purchase_order_line(
             self.product,
             50,
             self.env.ref("uom.product_uom_unit"),
             self.env.ref("base.main_company"),
-            self.supplierinfo,
+            self.partner_3,
             self.purchase_order,
         )
         self.assertTrue(res.get("discount"), "Should have a discount key")
@@ -135,7 +138,7 @@ class TestProductSupplierinfoDiscount(TransactionCase):
                 "price_unit": 10.0,
                 "product_id": product.id,
                 "product_qty": 1.0,
-                "product_uom": product.uom_po_id.id,
+                "product_uom": product.uom_id.id,
                 "order_id": order.id,
             }
         )
@@ -161,7 +164,7 @@ class TestProductSupplierinfoDiscount(TransactionCase):
                 "price_unit": 10.0,
                 "product_id": product.id,
                 "product_qty": 1.0,
-                "product_uom": product.uom_po_id.id,
+                "product_uom": product.uom_id.id,
                 "order_id": order.id,
             }
         )

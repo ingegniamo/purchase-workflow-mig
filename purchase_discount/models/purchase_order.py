@@ -101,13 +101,19 @@ class PurchaseOrderLine(models.Model):
         res = super()._prepare_purchase_order_line(
             product_id, product_qty, product_uom, company_id, supplier, po
         )
-        partner = supplier.partner_id
-        uom_po_qty = product_uom._compute_quantity(product_qty, product_id.uom_po_id)
+        # Odoo 19 core (purchase_stock._prepare_purchase_order_line_from_procurement,
+        # approvals_purchase) now calls this method with the vendor's res.partner
+        # directly, not a product.supplierinfo as in earlier versions: `supplier`
+        # *is* the partner, `supplier.partner_id` no longer exists.
+        partner = supplier
+        # uom_po_id was merged into uom_id in v19 (single product UoM, no more
+        # separate "purchase UoM"); mirror the base method's own conversion.
+        uom_po_qty = product_uom._compute_quantity(product_qty, product_id.uom_id)
         seller = product_id.with_company(company_id)._select_seller(
             partner_id=partner,
             quantity=uom_po_qty,
             date=po.date_order and po.date_order.date(),
-            uom_id=product_id.uom_po_id,
+            uom_id=product_id.uom_id,
         )
         res.update(self._prepare_purchase_order_line_from_seller(seller))
         return res
